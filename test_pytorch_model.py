@@ -6,6 +6,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # (Ghostcode via ChaosWhisperer)
 
+
 import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
@@ -21,13 +22,38 @@ def load_model(model_dir):
 
 def generate_text(model, tokenizer, prompt, max_length=50):
     try:
+        # Tokenize the input prompt
         inputs = tokenizer(prompt, return_tensors="pt")
         print(f"Tokenized inputs: {inputs}")
+
+        if inputs is None or 'input_ids' not in inputs:
+            print("Error: Tokenization resulted in None or missing input_ids.")
+            return None
         
-        outputs = model.generate(**inputs, max_length=max_length)
+        # Check the contents of the inputs
+        input_ids = inputs['input_ids']
+        attention_mask = inputs['attention_mask']
+        print(f"Input IDs: {input_ids}")
+        print(f"Attention Mask: {attention_mask}")
+
+        # Generate text
+        outputs = model.generate(input_ids=input_ids, attention_mask=attention_mask, max_length=max_length)
         print(f"Generated outputs: {outputs}")
-        
+
+        if outputs is None or len(outputs) == 0:
+            print("Error: Model generation resulted in None or empty outputs.")
+            return None
+
+        # Decode the generated output
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        print(f"Decoded text: {generated_text}")
+
+        # Print each token's ID and corresponding token
+        for i, token in enumerate(outputs[0]):
+            token_id = token.item()
+            token_str = tokenizer.decode([token_id])
+            print(f"Token {i}: {token_id} - {token_str}")
+
         return generated_text
     except Exception as e:
         print(f"Error generating text: {e}")

@@ -99,8 +99,10 @@ def convert_bpe_to_vocab(bpe_path, vocab_path, merges_path):
         json.dump(vocab, f, ensure_ascii=False, indent=2)
 
     # Create merges.txt
+    merges = [line for line in lines if " " in line]
     with open(merges_path, 'w', encoding='utf-8') as f:
-        f.writelines(lines)
+        f.write("#version: 0.2\n")
+        f.writelines(merges)
 
 def copy_tokenizer_files(checkpoint_dir, dest_dir):
     bpe_path = os.path.join(checkpoint_dir, 'vocab.bpe')
