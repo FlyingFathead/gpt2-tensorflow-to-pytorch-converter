@@ -22,7 +22,11 @@ def load_model(model_dir):
 def generate_text(model, tokenizer, prompt, max_length=50):
     try:
         inputs = tokenizer(prompt, return_tensors="pt")
+        print(f"Tokenized inputs: {inputs}")
+        
         outputs = model.generate(**inputs, max_length=max_length)
+        print(f"Generated outputs: {outputs}")
+        
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
         return generated_text
     except Exception as e:

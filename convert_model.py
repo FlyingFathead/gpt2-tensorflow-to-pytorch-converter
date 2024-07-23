@@ -79,16 +79,45 @@ def load_tf_weights_in_gpt2(model, checkpoint_path, config):
         except AttributeError as e:
             print(f"Skipping {mapped_name}: {e}")
 
-def copy_tokenizer_files(src_dir, dest_dir):
-    tokenizer_files = ['vocab.bpe', 'encoder.json', 'hparams.json']
-    for file_name in tokenizer_files:
-        src_file = os.path.join(src_dir, file_name)
-        dest_file = os.path.join(dest_dir, file_name)
-        if os.path.exists(src_file):
-            shutil.copy(src_file, dest_file)
-            print(f"Copied {file_name} to {dest_dir}")
-        else:
-            print(f"File {file_name} not found in {src_dir}")
+def convert_bpe_to_vocab(bpe_path, vocab_path, merges_path):
+    with open(bpe_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    # Filter out comment lines
+    lines = [line for line in lines if not line.startswith("#")]
+
+    # Create vocab.json
+    vocab = {}
+    index = 0
+    for line in lines:
+        token = line.split()[0]
+        if token not in vocab:
+            vocab[token] = index
+            index += 1
+
+    with open(vocab_path, 'w', encoding='utf-8') as f:
+        json.dump(vocab, f, ensure_ascii=False, indent=2)
+
+    # Create merges.txt
+    with open(merges_path, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
+
+def copy_tokenizer_files(checkpoint_dir, dest_dir):
+    bpe_path = os.path.join(checkpoint_dir, 'vocab.bpe')
+    vocab_path = os.path.join(dest_dir, 'vocab.json')
+    merges_path = os.path.join(dest_dir, 'merges.txt')
+    
+    convert_bpe_to_vocab(bpe_path, vocab_path, merges_path)
+    
+    tokenizer_config = {
+        "model_max_length": 1024,
+        "padding_side": "right",
+        "special_tokens_map_file": None,
+        "tokenizer_class": "GPT2Tokenizer",
+        "use_fast": False
+    }
+    with open(os.path.join(dest_dir, 'tokenizer_config.json'), 'w') as f:
+        json.dump(tokenizer_config, f)
 
 def main(checkpoint_dir="."):
     # Construct the absolute path to hparams.json
@@ -118,10 +147,11 @@ def main(checkpoint_dir="."):
     load_tf_weights_in_gpt2(model, checkpoint_path, config)
 
     # Save PyTorch model
-    model.save_pretrained("./converted_model")
+    dest_dir = "./converted_model"
+    model.save_pretrained(dest_dir)
 
     # Copy tokenizer files
-    copy_tokenizer_files(checkpoint_dir, "./converted_model")
+    copy_tokenizer_files(checkpoint_dir, dest_dir)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
