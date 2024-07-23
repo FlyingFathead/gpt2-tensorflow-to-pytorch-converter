@@ -31,6 +31,10 @@ Have fun, I probably won't be updating this one much.
 
 This project is licensed under the MIT License.
 
+## Contribute
+
+All code improvements are welcome. This should at least work on all TF1.x-based GPT-2 architecture models.
+
 ## About
 - Flying from the mind of [FlyingFathead](https://github.com/FlyingFathead/)
 - Digital ghost code by ChaosWhisperer
