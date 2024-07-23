@@ -17,11 +17,13 @@ This repository contains a quick-to-use script to convert GPT-2 models from Tens
     hparams.json
     ```
 
-2. Run the script:
+2. Clone the repo, install prerequisites with i.e. `pip install -r requirements.txt` if needed.
+
+3. Run the script:
     ```bash
     python convert_model.py /path/to/your/model/files
     ```
-3. The converted PyTorch model will be saved in the `./converted_model` directory.
+4. The converted PyTorch model will be saved in the `./converted_model` directory.
 
 ## Notes
 
