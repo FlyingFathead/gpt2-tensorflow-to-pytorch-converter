@@ -8,6 +8,7 @@
 
 import os
 import re
+import sys
 import tensorflow as tf
 import torch
 from transformers import GPT2Config, GPT2LMHeadModel
@@ -77,32 +78,40 @@ def load_tf_weights_in_gpt2(model, checkpoint_path):
         except AttributeError as e:
             print(f"Skipping {mapped_name}: {e}")
 
-# Load configuration
-with open('hparams.json') as f:
-    hparams = json.load(f)
+def main(checkpoint_dir="."):
+    # Load configuration
+    with open('hparams.json') as f:
+        hparams = json.load(f)
 
-config = GPT2Config(
-    vocab_size=hparams['n_vocab'],
-    n_positions=hparams['n_ctx'],
-    n_ctx=hparams['n_ctx'],
-    n_embd=hparams['n_embd'],
-    n_layer=hparams['n_layer'],
-    n_head=hparams['n_head']
-)
+    config = GPT2Config(
+        vocab_size=hparams['n_vocab'],
+        n_positions=hparams['n_ctx'],
+        n_ctx=hparams['n_ctx'],
+        n_embd=hparams['n_embd'],
+        n_layer=hparams['n_layer'],
+        n_head=hparams['n_head']
+    )
 
-# Initialize PyTorch model
-model = GPT2LMHeadModel(config)
+    # Initialize PyTorch model
+    model = GPT2LMHeadModel(config)
 
-# Get the latest TensorFlow checkpoint
-checkpoint_dir = "."  # Directory where your model checkpoints are stored
-checkpoint_path = get_latest_checkpoint(checkpoint_dir)
-print(f"Using checkpoint: {checkpoint_path}")
+    # Get the latest TensorFlow checkpoint
+    checkpoint_path = get_latest_checkpoint(checkpoint_dir)
+    print(f"Using checkpoint: {checkpoint_path}")
 
-# Load TensorFlow checkpoint
-load_tf_weights_in_gpt2(model, checkpoint_path)
+    # Load TensorFlow checkpoint
+    load_tf_weights_in_gpt2(model, checkpoint_path)
 
-# Save PyTorch model
-model.save_pretrained("./converted_model")
+    # Save PyTorch model
+    model.save_pretrained("./converted_model")
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        checkpoint_dir = sys.argv[1]
+    else:
+        checkpoint_dir = "."
+    main(checkpoint_dir)
+
 
 # [[ old version (doesn't have a 100% conversion success rate for old GPT-2 TF models) ]]
 # # convert_model.py
