@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # convert_model.py
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # https://www.github.com/FlyingFathead/gpt2-tensorflow-to-pytorch-converter
