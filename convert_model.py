@@ -25,7 +25,7 @@ def get_latest_checkpoint(checkpoint_dir):
     
     return os.path.join(checkpoint_dir, latest_checkpoint)
 
-def load_tf_weights_in_gpt2(model, checkpoint_path):
+def load_tf_weights_in_gpt2(model, checkpoint_path, config):
     reader = tf.train.load_checkpoint(checkpoint_path)
     var_list = reader.get_variable_to_shape_map()
 
@@ -79,8 +79,11 @@ def load_tf_weights_in_gpt2(model, checkpoint_path):
             print(f"Skipping {mapped_name}: {e}")
 
 def main(checkpoint_dir="."):
+    # Construct the absolute path to hparams.json
+    hparams_path = os.path.join(checkpoint_dir, 'hparams.json')
+
     # Load configuration
-    with open('hparams.json') as f:
+    with open(hparams_path) as f:
         hparams = json.load(f)
 
     config = GPT2Config(
@@ -100,7 +103,7 @@ def main(checkpoint_dir="."):
     print(f"Using checkpoint: {checkpoint_path}")
 
     # Load TensorFlow checkpoint
-    load_tf_weights_in_gpt2(model, checkpoint_path)
+    load_tf_weights_in_gpt2(model, checkpoint_path, config)
 
     # Save PyTorch model
     model.save_pretrained("./converted_model")
