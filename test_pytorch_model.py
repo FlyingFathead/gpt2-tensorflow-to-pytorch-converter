@@ -7,8 +7,10 @@
 # (Ghostcode via ChaosWhisperer)
 
 
-import torch
+#!/usr/bin/env python3
+
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
+import torch
 
 def load_model(model_dir):
     try:
@@ -44,15 +46,21 @@ def generate_text(model, tokenizer, prompt, max_length=50):
             print("Error: Model generation resulted in None or empty outputs.")
             return None
 
-        # Decode the generated output
-        generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        # Decode the generated output and handle NoneType tokens
+        generated_text = []
+        for token_id in outputs[0]:
+            token_id = token_id.item()
+            try:
+                token_str = tokenizer.decode([token_id], skip_special_tokens=True)
+            except Exception as e:
+                print(f"Error decoding token ID {token_id}: {e}")
+                token_str = None
+            generated_text.append(token_str)
+        
+        # Filter out NoneType tokens and join the text
+        generated_text = [token for token in generated_text if token is not None]
+        generated_text = ''.join(generated_text)
         print(f"Decoded text: {generated_text}")
-
-        # Print each token's ID and corresponding token
-        for i, token in enumerate(outputs[0]):
-            token_id = token.item()
-            token_str = tokenizer.decode([token_id])
-            print(f"Token {i}: {token_id} - {token_str}")
 
         return generated_text
     except Exception as e:
