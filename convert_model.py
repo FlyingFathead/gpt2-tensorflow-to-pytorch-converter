@@ -9,9 +9,10 @@
 import os
 import re
 import sys
+import shutil
 import tensorflow as tf
 import torch
-from transformers import GPT2Config, GPT2LMHeadModel
+from transformers import GPT2Config, GPT2LMHeadModel, GPT2Tokenizer
 import json
 import numpy as np
 
@@ -78,6 +79,17 @@ def load_tf_weights_in_gpt2(model, checkpoint_path, config):
         except AttributeError as e:
             print(f"Skipping {mapped_name}: {e}")
 
+def copy_tokenizer_files(src_dir, dest_dir):
+    tokenizer_files = ['vocab.bpe', 'encoder.json', 'hparams.json']
+    for file_name in tokenizer_files:
+        src_file = os.path.join(src_dir, file_name)
+        dest_file = os.path.join(dest_dir, file_name)
+        if os.path.exists(src_file):
+            shutil.copy(src_file, dest_file)
+            print(f"Copied {file_name} to {dest_dir}")
+        else:
+            print(f"File {file_name} not found in {src_dir}")
+
 def main(checkpoint_dir="."):
     # Construct the absolute path to hparams.json
     hparams_path = os.path.join(checkpoint_dir, 'hparams.json')
@@ -108,71 +120,12 @@ def main(checkpoint_dir="."):
     # Save PyTorch model
     model.save_pretrained("./converted_model")
 
+    # Copy tokenizer files
+    copy_tokenizer_files(checkpoint_dir, "./converted_model")
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         checkpoint_dir = sys.argv[1]
     else:
         checkpoint_dir = "."
     main(checkpoint_dir)
-
-
-# [[ old version (doesn't have a 100% conversion success rate for old GPT-2 TF models) ]]
-# # convert_model.py
-
-# import tensorflow as tf
-# import torch
-# from transformers import GPT2Config, GPT2LMHeadModel
-# import json
-# import numpy as np
-
-# def load_tf_weights_in_gpt2(model, config, checkpoint_path):
-#     reader = tf.train.load_checkpoint(checkpoint_path)
-#     var_list = reader.get_variable_to_shape_map()
-
-#     for name in var_list:
-#         tensor = reader.get_tensor(name)
-#         name = name.replace('model/', 'transformer.')
-#         name = name.replace('/w', '.weight')
-#         name = name.replace('/b', '.bias')
-
-#         if 'kernel' in name:
-#             name = name.replace('kernel', 'weight')
-#             tensor = np.transpose(tensor)
-        
-#         # Handle the specific cases of layer normalization
-#         if 'g' in name:
-#             name = name.replace('g', 'weight')
-#         if 'b' in name:
-#             name = name.replace('b', 'bias')
-
-#         # Now set the tensor in the PyTorch model
-#         try:
-#             pointer = model
-#             for m_name in name.split('.'):
-#                 pointer = getattr(pointer, m_name)
-#             pointer.data = torch.tensor(tensor, dtype=pointer.data.dtype)
-#         except AttributeError as e:
-#             print(f"Skipping {name}: {e}")
-
-# # Load configuration
-# with open('hparams.json') as f:
-#     hparams = json.load(f)
-
-# config = GPT2Config(
-#     vocab_size=hparams['n_vocab'],
-#     n_positions=hparams['n_ctx'],
-#     n_ctx=hparams['n_ctx'],
-#     n_embd=hparams['n_embd'],
-#     n_layer=hparams['n_layer'],
-#     n_head=hparams['n_head']
-# )
-
-# # Initialize PyTorch model
-# model = GPT2LMHeadModel(config)
-
-# # Load TensorFlow checkpoint
-# checkpoint_path = "model-154257500"
-# load_tf_weights_in_gpt2(model, config, checkpoint_path)
-
-# # Save PyTorch model
-# model.save_pretrained("./converted_model")
