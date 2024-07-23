@@ -1,6 +1,7 @@
 # fix_encoding_and_sync_files.py
 
 import json
+import sys
 
 def fix_encoding_and_create_files(bpe_path, encoder_path, vocab_json_path, merges_txt_path):
     # Correct encoding issue by reading the file correctly
@@ -28,8 +29,12 @@ def fix_encoding_and_create_files(bpe_path, encoder_path, vocab_json_path, merge
     print(f"Created {vocab_json_path} and {merges_txt_path} with corrected encoding.")
 
 def main():
-    bpe_path = "/mnt/data/vocab.bpe"
-    encoder_path = "/mnt/data/encoder.json"
+    if len(sys.argv) != 3:
+        print("Usage: python fix_encoding_and_sync_files.py <bpe_path> <encoder_path>")
+        sys.exit(1)
+
+    bpe_path = sys.argv[1]
+    encoder_path = sys.argv[2]
     vocab_json_path = "./converted_model/vocab.json"
     merges_txt_path = "./converted_model/merges.txt"
     
